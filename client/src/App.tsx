@@ -7,6 +7,7 @@ import DashboardLayout from "./components/DashboardLayout";
 import Home from "./pages/Home";
 import Grants from "./pages/Grants";
 import GrantDetail from "./pages/GrantDetail";
+import ApplyForGrant from "./pages/ApplyForGrant";
 import Applications from "./pages/Applications";
 import ApplicationDetail from "./pages/ApplicationDetail";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/public-dashboard" component={PublicDashboard} />
       <Route path="/grants" component={Grants} />
       <Route path="/grants/:id" component={GrantDetail} />
+      <Route path="/grants/:id/apply" component={ApplyForGrant} />
       <Route path="/roi-calculator" component={ROICalculator} />
 
       {/* Protected Routes */}

@@ -1,4 +1,4 @@
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -185,9 +185,13 @@ export default function GrantDetail() {
             <Card className="p-6 sticky top-20 space-y-4">
               {user ? (
                 <>
-                  <Button className="w-full" size="lg">
-                    Apply for Grant
-                  </Button>
+                  <Link href={`/grants/${grant.id}/apply`}>
+                    <a>
+                      <Button className="w-full" size="lg">
+                        Apply for Grant
+                      </Button>
+                    </a>
+                  </Link>
                   <Button variant="outline" className="w-full" onClick={handleWatch}>
                     <Heart className="w-4 h-4 mr-2" /> Watch Grant
                   </Button>
