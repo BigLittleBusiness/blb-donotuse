@@ -9,6 +9,9 @@ import Grants from "./pages/Grants";
 import GrantDetail from "./pages/GrantDetail";
 import ApplyForGrant from "./pages/ApplyForGrant";
 import Applications from "./pages/Applications";
+import ReviewApplications from "./pages/ReviewApplications";
+import EmailPreferences from "./pages/EmailPreferences";
+import ManageGrants from "./pages/ManageGrants";
 import ApplicationDetail from "./pages/ApplicationDetail";
 import AdminDashboard from "./pages/AdminDashboard";
 import Analytics from "./pages/Analytics";
@@ -36,6 +39,9 @@ function Router() {
           <Route path="/dashboard" component={() => <DashboardLayout><AdminDashboard /></DashboardLayout>} />
           <Route path="/my-applications" component={() => <DashboardLayout><Applications /></DashboardLayout>} />
           <Route path="/applications/:id" component={() => <DashboardLayout><ApplicationDetail /></DashboardLayout>} />
+          <Route path="/review-applications" component={() => <DashboardLayout><ReviewApplications /></DashboardLayout>} />
+          <Route path="/email-preferences" component={() => <DashboardLayout><EmailPreferences /></DashboardLayout>} />
+          <Route path="/manage-grants" component={() => <DashboardLayout><ManageGrants /></DashboardLayout>} />
           <Route path="/analytics" component={() => <DashboardLayout><Analytics /></DashboardLayout>} />
         </>
       )}
