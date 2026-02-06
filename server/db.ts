@@ -1,4 +1,4 @@
-import { eq, and, or, desc, asc, sql } from "drizzle-orm";
+import { eq, desc, asc, and, or, gte, lte, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser,
@@ -183,6 +183,79 @@ export async function getAllGrants(filters?: {
     .offset(offset);
 }
 
+export async function searchGrants(filters?: {
+  query?: string;
+  status?: string;
+  category?: string;
+  minBudget?: number;
+  maxBudget?: number;
+  sortBy?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions: any[] = [];
+
+  // Text search in title and description
+  if (filters?.query) {
+    const searchTerm = `%${filters.query}%`;
+    conditions.push(
+      or(
+        like(grants.title, searchTerm),
+        like(grants.description, searchTerm)
+      )
+    );
+  }
+
+  // Status filter
+  if (filters?.status) {
+    conditions.push(eq(grants.status, filters.status as any));
+  }
+
+  // Category filter
+  if (filters?.category) {
+    conditions.push(eq(grants.category, filters.category));
+  }
+
+  // Budget range filter
+  if (filters?.minBudget !== undefined) {
+    conditions.push(gte(grants.budget, filters.minBudget as any));
+  }
+  if (filters?.maxBudget !== undefined) {
+    conditions.push(lte(grants.budget, filters.maxBudget as any));
+  }
+
+  const limit = Math.min(filters?.limit || 20, 100);
+  const offset = filters?.offset || 0;
+
+  let baseQuery = db.select().from(grants) as any;
+
+  if (conditions.length > 0) {
+    baseQuery = baseQuery.where(and(...conditions));
+  }
+
+  // Apply sorting
+  let sortOrder = desc(grants.createdAt);
+  switch (filters?.sortBy) {
+    case "oldest":
+      sortOrder = asc(grants.createdAt);
+      break;
+    case "budget_asc":
+      sortOrder = asc(grants.budget);
+      break;
+    case "budget_desc":
+      sortOrder = desc(grants.budget);
+      break;
+    case "closing_soon":
+      sortOrder = asc(grants.closing_date);
+      break;
+  }
+
+  return baseQuery.orderBy(sortOrder).limit(limit).offset(offset);
+}
+
 export async function updateGrant(id: number, data: Partial<typeof grants.$inferInsert>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -203,8 +276,8 @@ export async function createApplication(data: {
   grant_id: number;
   applicant_id: number;
   application_text: string;
-  requested_amount?: string;
-  supporting_documents?: any[];
+  requested_amount?: number;
+  status?: string;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -214,7 +287,7 @@ export async function createApplication(data: {
     applicant_id: data.applicant_id,
     application_text: data.application_text,
     requested_amount: data.requested_amount as any,
-    supporting_documents: data.supporting_documents,
+    status: (data.status || "draft") as any,
   });
 }
 
@@ -225,25 +298,18 @@ export async function getApplicationById(id: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function getApplicationsByGrantId(grantId: number, filters?: { status?: string; limit?: number; offset?: number }) {
+export async function getApplicationsByGrantId(grantId: number) {
   const db = await getDb();
   if (!db) return [];
 
-  const conditions = [eq(applications.grant_id, grantId)];
-  if (filters?.status) {
-    conditions.push(eq(applications.status, filters.status as any));
-  }
+  return db.select().from(applications).where(eq(applications.grant_id, grantId));
+}
 
-  const limit = filters?.limit || 50;
-  const offset = filters?.offset || 0;
+export async function getApplicationsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
 
-  return db
-    .select()
-    .from(applications)
-    .where(and(...conditions))
-    .orderBy(desc(applications.createdAt))
-    .limit(limit)
-    .offset(offset);
+  return db.select().from(applications).where(eq(applications.applicant_id, userId));
 }
 
 export async function updateApplication(id: number, data: Partial<typeof applications.$inferInsert>) {
@@ -260,7 +326,7 @@ export async function createReview(data: {
   reviewer_id: number;
   score: string;
   comments?: string;
-  recommendation: "approve" | "reject" | "needs_revision";
+  recommendation?: string;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -270,7 +336,7 @@ export async function createReview(data: {
     reviewer_id: data.reviewer_id,
     score: data.score as any,
     comments: data.comments,
-    recommendation: data.recommendation,
+    recommendation: (data.recommendation || "needs_revision") as any,
   });
 }
 
@@ -281,7 +347,7 @@ export async function getReviewsByApplicationId(applicationId: number) {
   return db.select().from(reviews).where(eq(reviews.application_id, applicationId));
 }
 
-// ============ COMMUNITY VOTE OPERATIONS ============
+// ============ COMMUNITY ENGAGEMENT ROUTERS ============
 
 export async function createCommunityVote(data: {
   grant_id?: number;
@@ -406,11 +472,7 @@ export async function getNotificationsByUserId(userId: number, unreadOnly = fals
     conditions.push(eq(notifications.read, false));
   }
 
-  return db
-    .select()
-    .from(notifications)
-    .where(and(...conditions))
-    .orderBy(desc(notifications.createdAt));
+  return db.select().from(notifications).where(and(...conditions)).orderBy(desc(notifications.createdAt));
 }
 
 export async function markNotificationAsRead(id: number) {
@@ -422,23 +484,14 @@ export async function markNotificationAsRead(id: number) {
 
 // ============ ANALYTICS OPERATIONS ============
 
-export async function getAnalyticsByMetricType(metricType: string, period?: string) {
+export async function getAnalyticsByPeriod(period: string) {
   const db = await getDb();
   if (!db) return [];
 
-  const conditions = [eq(analytics.metric_type, metricType)];
-  if (period) {
-    conditions.push(eq(analytics.period, period));
-  }
-
-  return db
-    .select()
-    .from(analytics)
-    .where(and(...conditions))
-    .orderBy(desc(analytics.createdAt));
+  return db.select().from(analytics).where(eq(analytics.period, period));
 }
 
-// ============ COMMUNITY POST OPERATIONS ============
+// ============ COMMUNITY POSTS OPERATIONS ============
 
 export async function createCommunityPost(data: {
   user_id: number;

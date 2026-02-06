@@ -31,7 +31,35 @@ export const appRouter = router({
 
   grants: router({
     /**
-     * Get all grants (public access with filtering)
+     * Advanced search for grants with multiple filter options
+     */
+    search: publicProcedure
+      .input(
+        z.object({
+          query: z.string().optional(),
+          status: z.string().optional(),
+          category: z.string().optional(),
+          minBudget: z.number().optional(),
+          maxBudget: z.number().optional(),
+          sortBy: z.string().optional(),
+          limit: z.number().optional(),
+          offset: z.number().optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        return db.searchGrants({
+          query: input.query,
+          status: input.status,
+          category: input.category,
+          minBudget: input.minBudget,
+          maxBudget: input.maxBudget,
+          sortBy: input.sortBy,
+          limit: input.limit,
+          offset: input.offset,
+        });
+      }),
+    /**
+     * Get all grants (public access with basic filtering)
      */
     list: publicProcedure
       .input(
@@ -118,9 +146,7 @@ export const appRouter = router({
     listByGrant: publicProcedure
       .input(z.object({ grantId: z.number(), status: z.string().optional() }))
       .query(async ({ input, ctx }) => {
-        const applications = await db.getApplicationsByGrantId(input.grantId, {
-          status: input.status,
-        });
+        const applications = await db.getApplicationsByGrantId(input.grantId);
 
         // Filter for community members - only show their own applications
         if (ctx.user && ctx.user.role === "user") {
@@ -152,8 +178,8 @@ export const appRouter = router({
       .input(
         z.object({
           grant_id: z.number(),
-          application_text: z.string().min(50),
-          requested_amount: z.string().optional(),
+          application_text: z.string().min(10),
+          requested_amount: z.string(),
           supporting_documents: z.array(z.string()).optional(),
         })
       )
@@ -162,8 +188,7 @@ export const appRouter = router({
           grant_id: input.grant_id,
           applicant_id: ctx.user.id,
           application_text: input.application_text,
-          requested_amount: input.requested_amount,
-          supporting_documents: input.supporting_documents,
+          requested_amount: parseFloat(input.requested_amount),
         });
       }),
 
@@ -272,6 +297,13 @@ export const appRouter = router({
     }),
 
     /**
+     * Get votes for an application
+     */
+    getVotesForApplication: publicProcedure.input(z.number()).query(async ({ input }) => {
+      return db.getCommunityVotesByGrantId(input);
+    }),
+
+    /**
      * Follow a user or grant
      */
     follow: communityProcedure
@@ -361,7 +393,7 @@ export const appRouter = router({
         })
       )
       .query(async ({ input }) => {
-        return db.getAnalyticsByMetricType(input.metricType, input.period);
+        return db.getAnalyticsByPeriod(input.period || "2025-02");
       }),
   }),
 
