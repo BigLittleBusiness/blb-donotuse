@@ -137,3 +137,15 @@
 - [x] Add export to tRPC procedures
 - [x] Test all export workflows
 - [ ] Commit to GitHub
+
+
+## Advanced Filter Dashboard
+- [x] Create saved_filters table in database schema
+- [x] Implement backend procedures for CRUD operations on saved filters
+- [x] Create filter builder UI component with condition support
+- [x] Build SavedFilters dashboard page
+- [x] Implement filter sharing and permissions
+- [x] Add preset filters for common queries
+- [ ] Integrate filters with grant search
+- [x] Test advanced filter workflows
+- [ ] Commit to GitHub

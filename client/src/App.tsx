@@ -19,6 +19,7 @@ import ROICalculator from "./pages/ROICalculator";
 import PublicDashboard from "./pages/PublicDashboard";
 import ExportApplications from "./pages/ExportApplications";
 import ExportReviews from "./pages/ExportReviews";
+import SavedFilters from "./pages/SavedFilters";
 import NotFound from "./pages/NotFound";
 import { useAuth } from "./_core/hooks/useAuth";
 
@@ -47,6 +48,7 @@ function Router() {
           <Route path="/analytics" component={() => <DashboardLayout><Analytics /></DashboardLayout>} />
           <Route path="/export/applications" component={() => <DashboardLayout><ExportApplications /></DashboardLayout>} />
           <Route path="/export/reviews" component={() => <DashboardLayout><ExportReviews /></DashboardLayout>} />
+          <Route path="/filters" component={() => <DashboardLayout><SavedFilters /></DashboardLayout>} />
         </>
       )}
 

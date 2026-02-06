@@ -15,6 +15,13 @@
       "when": 1770368712666,
       "tag": "0001_strange_lilandra",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1770376991555,
+      "tag": "0002_broken_infant_terrible",
+      "breakpoints": true
     }
   ]
 }

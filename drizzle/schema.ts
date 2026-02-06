@@ -206,3 +206,22 @@ export const community_posts = mysqlTable("community_posts", {
 
 export type CommunityPost = typeof community_posts.$inferSelect;
 export type InsertCommunityPost = typeof community_posts.$inferInsert;
+
+/**
+ * Saved Filters table - for staff to save and manage complex filter combinations
+ */
+export const saved_filters = mysqlTable("saved_filters", {
+  id: int("id").autoincrement().primaryKey(),
+  user_id: int("user_id").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  filters: json("filters").notNull(),
+  is_public: boolean("is_public").default(false).notNull(),
+  is_preset: boolean("is_preset").default(false).notNull(),
+  usage_count: int("usage_count").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SavedFilter = typeof saved_filters.$inferSelect;
+export type InsertSavedFilter = typeof saved_filters.$inferInsert;

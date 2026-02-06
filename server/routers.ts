@@ -5,6 +5,7 @@ import { adminProcedure, staffProcedure, communityProcedure } from "./auth";
 import * as db from "./db";
 import { z } from "zod";
 import { exportRouter } from "./routers/export";
+import { filtersRouter } from "./routers/filters";
 
 export const appRouter = router({
   system: router({
@@ -416,6 +417,9 @@ export const appRouter = router({
 
   // ============ EXPORT ROUTERS ============
   export: exportRouter,
+
+  // ============ FILTERS ROUTERS ============
+  filters: filtersRouter,
 });
 
 export type AppRouter = typeof appRouter;
