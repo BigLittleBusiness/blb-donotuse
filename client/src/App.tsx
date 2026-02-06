@@ -17,6 +17,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Analytics from "./pages/Analytics";
 import ROICalculator from "./pages/ROICalculator";
 import PublicDashboard from "./pages/PublicDashboard";
+import ExportApplications from "./pages/ExportApplications";
+import ExportReviews from "./pages/ExportReviews";
 import NotFound from "./pages/NotFound";
 import { useAuth } from "./_core/hooks/useAuth";
 
@@ -43,6 +45,8 @@ function Router() {
           <Route path="/email-preferences" component={() => <DashboardLayout><EmailPreferences /></DashboardLayout>} />
           <Route path="/manage-grants" component={() => <DashboardLayout><ManageGrants /></DashboardLayout>} />
           <Route path="/analytics" component={() => <DashboardLayout><Analytics /></DashboardLayout>} />
+          <Route path="/export/applications" component={() => <DashboardLayout><ExportApplications /></DashboardLayout>} />
+          <Route path="/export/reviews" component={() => <DashboardLayout><ExportReviews /></DashboardLayout>} />
         </>
       )}
 

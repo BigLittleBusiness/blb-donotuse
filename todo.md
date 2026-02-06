@@ -124,3 +124,16 @@
 - [x] Add grants.search tRPC procedure
 - [x] Test search functionality end-to-end
 - [ ] Commit to GitHub
+
+
+## CSV and PDF Export Functionality
+- [x] Create backend export service for CSV generation
+- [x] Create backend export service for PDF generation
+- [x] Implement applications export (CSV and PDF)
+- [x] Implement reviews export (CSV and PDF)
+- [x] Implement grants summary export
+- [x] Build export UI components
+- [x] Create export pages for admin/staff
+- [x] Add export to tRPC procedures
+- [x] Test all export workflows
+- [ ] Commit to GitHub

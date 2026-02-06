@@ -4,6 +4,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { adminProcedure, staffProcedure, communityProcedure } from "./auth";
 import * as db from "./db";
 import { z } from "zod";
+import { exportRouter } from "./routers/export";
 
 export const appRouter = router({
   system: router({
@@ -397,8 +398,7 @@ export const appRouter = router({
       }),
   }),
 
-  // ============ USER ROUTERS ============
-
+   // ============ USER ROUTERS ============
   users: router({
     /**
      * Get current user profile
@@ -406,7 +406,6 @@ export const appRouter = router({
     profile: communityProcedure.query(async ({ ctx }) => {
       return db.getUserById(ctx.user.id);
     }),
-
     /**
      * Get user by ID (public)
      */
@@ -414,6 +413,9 @@ export const appRouter = router({
       return db.getUserById(input);
     }),
   }),
+
+  // ============ EXPORT ROUTERS ============
+  export: exportRouter,
 });
 
 export type AppRouter = typeof appRouter;
