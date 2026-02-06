@@ -1,11 +1,23 @@
-import { eq } from "drizzle-orm";
+import { eq, and, or, desc, asc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
-import { ENV } from './_core/env';
+import {
+  InsertUser,
+  users,
+  grants,
+  applications,
+  reviews,
+  community_votes,
+  comments,
+  follows,
+  grant_watches,
+  notifications,
+  analytics,
+  community_posts,
+} from "../drizzle/schema";
+import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -17,6 +29,8 @@ export async function getDb() {
   }
   return _db;
 }
+
+// ============ USER OPERATIONS ============
 
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {
@@ -35,7 +49,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     };
     const updateSet: Record<string, unknown> = {};
 
-    const textFields = ["name", "email", "loginMethod"] as const;
+    const textFields = ["name", "email", "loginMethod", "location", "bio", "avatar"] as const;
     type TextField = (typeof textFields)[number];
 
     const assignNullable = (field: TextField) => {
@@ -56,8 +70,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values.role = user.role;
       updateSet.role = user.role;
     } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
+      values.role = "admin";
+      updateSet.role = "admin";
     }
 
     if (!values.lastSignedIn) {
@@ -85,8 +99,367 @@ export async function getUserByOpenId(openId: string) {
   }
 
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function getUserById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// ============ GRANT OPERATIONS ============
+
+export async function createGrant(data: {
+  title: string;
+  description: string;
+  budget: string;
+  category: string;
+  created_by: number;
+  opening_date?: Date;
+  closing_date?: Date;
+  eligibility_criteria?: string;
+  application_requirements?: string;
+  max_applications?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(grants).values({
+    title: data.title,
+    description: data.description,
+    budget: data.budget as any,
+    budgetAlias: data.budget as any,
+    category: data.category,
+    created_by: data.created_by,
+    opening_date: data.opening_date,
+    closing_date: data.closing_date,
+    eligibility_criteria: data.eligibility_criteria,
+    application_requirements: data.application_requirements,
+    max_applications: data.max_applications,
+  });
+
+  return result;
+}
+
+export async function getGrantById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(grants).where(eq(grants.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getAllGrants(filters?: {
+  status?: string;
+  category?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [];
+  if (filters?.status) {
+    conditions.push(eq(grants.status, filters.status as any));
+  }
+  if (filters?.category) {
+    conditions.push(eq(grants.category, filters.category));
+  }
+
+  const limit = filters?.limit || 50;
+  const offset = filters?.offset || 0;
+
+  if (conditions.length === 0) {
+    return db.select().from(grants).orderBy(desc(grants.createdAt)).limit(limit).offset(offset);
+  }
+
+  return db
+    .select()
+    .from(grants)
+    .where(and(...conditions))
+    .orderBy(desc(grants.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+export async function updateGrant(id: number, data: Partial<typeof grants.$inferInsert>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.update(grants).set(data).where(eq(grants.id, id));
+}
+
+export async function deleteGrant(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.delete(grants).where(eq(grants.id, id));
+}
+
+// ============ APPLICATION OPERATIONS ============
+
+export async function createApplication(data: {
+  grant_id: number;
+  applicant_id: number;
+  application_text: string;
+  requested_amount?: string;
+  supporting_documents?: any[];
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(applications).values({
+    grant_id: data.grant_id,
+    applicant_id: data.applicant_id,
+    application_text: data.application_text,
+    requested_amount: data.requested_amount as any,
+    supporting_documents: data.supporting_documents,
+  });
+}
+
+export async function getApplicationById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(applications).where(eq(applications.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getApplicationsByGrantId(grantId: number, filters?: { status?: string; limit?: number; offset?: number }) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [eq(applications.grant_id, grantId)];
+  if (filters?.status) {
+    conditions.push(eq(applications.status, filters.status as any));
+  }
+
+  const limit = filters?.limit || 50;
+  const offset = filters?.offset || 0;
+
+  return db
+    .select()
+    .from(applications)
+    .where(and(...conditions))
+    .orderBy(desc(applications.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+export async function updateApplication(id: number, data: Partial<typeof applications.$inferInsert>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.update(applications).set(data).where(eq(applications.id, id));
+}
+
+// ============ REVIEW OPERATIONS ============
+
+export async function createReview(data: {
+  application_id: number;
+  reviewer_id: number;
+  score: string;
+  comments?: string;
+  recommendation: "approve" | "reject" | "needs_revision";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(reviews).values({
+    application_id: data.application_id,
+    reviewer_id: data.reviewer_id,
+    score: data.score as any,
+    comments: data.comments,
+    recommendation: data.recommendation,
+  });
+}
+
+export async function getReviewsByApplicationId(applicationId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(reviews).where(eq(reviews.application_id, applicationId));
+}
+
+// ============ COMMUNITY VOTE OPERATIONS ============
+
+export async function createCommunityVote(data: {
+  grant_id?: number;
+  application_id?: number;
+  voter_id: number;
+  vote_type: "support" | "oppose" | "neutral";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(community_votes).values({
+    grant_id: data.grant_id,
+    application_id: data.application_id,
+    voter_id: data.voter_id,
+    vote_type: data.vote_type,
+  });
+}
+
+export async function getCommunityVotesByGrantId(grantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(community_votes).where(eq(community_votes.grant_id, grantId));
+}
+
+// ============ COMMENT OPERATIONS ============
+
+export async function createComment(data: {
+  grant_id?: number;
+  application_id?: number;
+  user_id: number;
+  content: string;
+  parent_comment_id?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(comments).values({
+    grant_id: data.grant_id,
+    application_id: data.application_id,
+    user_id: data.user_id,
+    content: data.content,
+    parent_comment_id: data.parent_comment_id,
+  });
+}
+
+export async function getCommentsByGrantId(grantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(comments).where(eq(comments.grant_id, grantId)).orderBy(desc(comments.createdAt));
+}
+
+// ============ FOLLOW OPERATIONS ============
+
+export async function createFollow(followerId: number, followeeId?: number, grantId?: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(follows).values({
+    follower_id: followerId,
+    followee_id: followeeId,
+    grant_id: grantId,
+  });
+}
+
+export async function getFollowersByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(follows).where(eq(follows.followee_id, userId));
+}
+
+// ============ GRANT WATCH OPERATIONS ============
+
+export async function createGrantWatch(userId: number, grantId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(grant_watches).values({
+    user_id: userId,
+    grant_id: grantId,
+  });
+}
+
+export async function getGrantWatchesByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(grant_watches).where(eq(grant_watches.user_id, userId));
+}
+
+// ============ NOTIFICATION OPERATIONS ============
+
+export async function createNotification(data: {
+  user_id: number;
+  title: string;
+  content?: string;
+  type: "application_update" | "grant_update" | "comment" | "vote" | "follow" | "system";
+  related_grant_id?: number;
+  related_application_id?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(notifications).values({
+    user_id: data.user_id,
+    title: data.title,
+    content: data.content,
+    type: data.type,
+    related_grant_id: data.related_grant_id,
+    related_application_id: data.related_application_id,
+  });
+}
+
+export async function getNotificationsByUserId(userId: number, unreadOnly = false) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [eq(notifications.user_id, userId)];
+  if (unreadOnly) {
+    conditions.push(eq(notifications.read, false));
+  }
+
+  return db
+    .select()
+    .from(notifications)
+    .where(and(...conditions))
+    .orderBy(desc(notifications.createdAt));
+}
+
+export async function markNotificationAsRead(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.update(notifications).set({ read: true }).where(eq(notifications.id, id));
+}
+
+// ============ ANALYTICS OPERATIONS ============
+
+export async function getAnalyticsByMetricType(metricType: string, period?: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [eq(analytics.metric_type, metricType)];
+  if (period) {
+    conditions.push(eq(analytics.period, period));
+  }
+
+  return db
+    .select()
+    .from(analytics)
+    .where(and(...conditions))
+    .orderBy(desc(analytics.createdAt));
+}
+
+// ============ COMMUNITY POST OPERATIONS ============
+
+export async function createCommunityPost(data: {
+  user_id: number;
+  grant_id?: number;
+  title: string;
+  content: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(community_posts).values({
+    user_id: data.user_id,
+    grant_id: data.grant_id,
+    title: data.title,
+    content: data.content,
+  });
+}
+
+export async function getCommunityPostsByGrantId(grantId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(community_posts).where(eq(community_posts.grant_id, grantId)).orderBy(desc(community_posts.createdAt));
+}
