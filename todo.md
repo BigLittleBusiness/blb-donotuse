@@ -149,3 +149,14 @@
 - [ ] Integrate filters with grant search
 - [x] Test advanced filter workflows
 - [ ] Commit to GitHub
+
+
+## Real-Time Notifications
+- [x] Set up WebSocket infrastructure with Socket.IO
+- [x] Create notification event emitters for application submissions
+- [x] Create notification event emitters for status changes
+- [x] Build real-time notification UI component
+- [x] Integrate notifications with dashboard
+- [x] Add notification sound and browser alerts
+- [x] Test real-time notification workflows
+- [ ] Commit to GitHub
