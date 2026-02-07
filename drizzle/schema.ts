@@ -284,3 +284,26 @@ export const campaign_recipients = mysqlTable("campaign_recipients", {
 
 export type CampaignRecipient = typeof campaign_recipients.$inferSelect;
 export type InsertCampaignRecipient = typeof campaign_recipients.$inferInsert;
+
+
+/**
+ * Email Delivery Logs table - tracks all email delivery attempts
+ */
+export const email_delivery_logs = mysqlTable("email_delivery_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  campaign_id: int("campaign_id"),
+  recipient_email: varchar("recipient_email", { length: 320 }).notNull(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  message_id: varchar("message_id", { length: 255 }),
+  provider: varchar("provider", { length: 50 }).notNull(), // mock, sendgrid, ses
+  status: mysqlEnum("status", ["pending", "sent", "failed", "bounced", "opened", "clicked"]).default("pending").notNull(),
+  error_message: text("error_message"),
+  delivery_time_ms: int("delivery_time_ms"), // Time taken to deliver in milliseconds
+  attempts: int("attempts").default(1).notNull(),
+  last_attempt_at: datetime("last_attempt_at"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type EmailDeliveryLog = typeof email_delivery_logs.$inferSelect;
+export type InsertEmailDeliveryLog = typeof email_delivery_logs.$inferInsert;

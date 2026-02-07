@@ -7,6 +7,7 @@ import { z } from "zod";
 import { exportRouter } from "./routers/export";
 import { filtersRouter } from "./routers/filters";
 import { campaignsRouter } from "./routers/campaigns";
+import { emailProviderRouter } from "./routers/email-provider";
 
 export const appRouter = router({
   system: router({
@@ -424,6 +425,9 @@ export const appRouter = router({
 
   // ============ CAMPAIGNS ROUTERS ============
   campaigns: campaignsRouter,
+
+  // ============ EMAIL PROVIDER ROUTERS ============
+  emailProvider: emailProviderRouter,
 });
 
 export type AppRouter = typeof appRouter;

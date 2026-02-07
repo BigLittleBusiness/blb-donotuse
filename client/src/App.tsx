@@ -21,6 +21,7 @@ import ExportApplications from "./pages/ExportApplications";
 import ExportReviews from "./pages/ExportReviews";
 import SavedFilters from "./pages/SavedFilters";
 import CampaignBuilder from "./pages/CampaignBuilder";
+import EmailProviderDashboard from "./pages/EmailProviderDashboard";
 import NotFound from "./pages/NotFound";
 import { useAuth } from "./_core/hooks/useAuth";
 
@@ -48,9 +49,9 @@ function Router() {
           <Route path="/manage-grants" component={() => <DashboardLayout><ManageGrants /></DashboardLayout>} />
           <Route path="/analytics" component={() => <DashboardLayout><Analytics /></DashboardLayout>} />
           <Route path="/export/applications" component={() => <DashboardLayout><ExportApplications /></DashboardLayout>} />
-          <Route path="/export/reviews" component={() => <DashboardLayout><ExportReviews /></DashboardLayout>} />
-          <Route path="/filters" component={() => <DashboardLayout><SavedFilters /></DashboardLayout>} />
           <Route path="/campaigns/new" component={() => <DashboardLayout><CampaignBuilder /></DashboardLayout>} />
+          <Route path="/saved-filters" component={() => <DashboardLayout><SavedFilters /></DashboardLayout>} />
+          <Route path="/admin/email-provider" component={() => <DashboardLayout><EmailProviderDashboard /></DashboardLayout>} />
         </>
       )}
 
