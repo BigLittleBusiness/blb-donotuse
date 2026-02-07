@@ -6,6 +6,7 @@ import * as db from "./db";
 import { z } from "zod";
 import { exportRouter } from "./routers/export";
 import { filtersRouter } from "./routers/filters";
+import { campaignsRouter } from "./routers/campaigns";
 
 export const appRouter = router({
   system: router({
@@ -420,6 +421,9 @@ export const appRouter = router({
 
   // ============ FILTERS ROUTERS ============
   filters: filtersRouter,
+
+  // ============ CAMPAIGNS ROUTERS ============
+  campaigns: campaignsRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -225,3 +225,62 @@ export const saved_filters = mysqlTable("saved_filters", {
 
 export type SavedFilter = typeof saved_filters.$inferSelect;
 export type InsertSavedFilter = typeof saved_filters.$inferInsert;
+
+
+/**
+ * Email Campaigns table - for admin bulk email campaigns
+ */
+export const email_campaigns = mysqlTable("email_campaigns", {
+  id: int("id").autoincrement().primaryKey(),
+  created_by: int("created_by").notNull(), // Admin who created the campaign
+  name: varchar("name", { length: 255 }).notNull(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  template_type: mysqlEnum("template_type", ["announcement", "reminder", "update", "custom"]).default("custom").notNull(),
+  
+  // Targeting criteria
+  target_type: mysqlEnum("target_type", ["all_users", "by_grant_category", "by_application_status", "by_user_role", "custom_list"]).notNull(),
+  target_grants: json("target_grants"), // Array of grant IDs
+  target_categories: json("target_categories"), // Array of grant categories
+  target_statuses: json("target_statuses"), // Array of application statuses
+  target_roles: json("target_roles"), // Array of user roles
+  target_user_ids: json("target_user_ids"), // Array of specific user IDs
+  
+  // Campaign settings
+  status: mysqlEnum("status", ["draft", "scheduled", "sending", "sent", "paused", "cancelled"]).default("draft").notNull(),
+  scheduled_at: datetime("scheduled_at"), // When to send
+  sent_at: datetime("sent_at"), // When it was actually sent
+  
+  // Statistics
+  total_recipients: int("total_recipients").default(0).notNull(),
+  sent_count: int("sent_count").default(0).notNull(),
+  opened_count: int("opened_count").default(0).notNull(),
+  clicked_count: int("clicked_count").default(0).notNull(),
+  bounced_count: int("bounced_count").default(0).notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type EmailCampaign = typeof email_campaigns.$inferSelect;
+export type InsertEmailCampaign = typeof email_campaigns.$inferInsert;
+
+/**
+ * Campaign Recipients table - tracks individual recipient delivery status
+ */
+export const campaign_recipients = mysqlTable("campaign_recipients", {
+  id: int("id").autoincrement().primaryKey(),
+  campaign_id: int("campaign_id").notNull(),
+  user_id: int("user_id").notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  status: mysqlEnum("status", ["pending", "sent", "opened", "clicked", "bounced", "failed"]).default("pending").notNull(),
+  sent_at: datetime("sent_at"),
+  opened_at: datetime("opened_at"),
+  clicked_at: datetime("clicked_at"),
+  error_message: text("error_message"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CampaignRecipient = typeof campaign_recipients.$inferSelect;
+export type InsertCampaignRecipient = typeof campaign_recipients.$inferInsert;

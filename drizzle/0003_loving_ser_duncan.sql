@@ -1,0 +1,40 @@
+CREATE TABLE `campaign_recipients` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`campaign_id` int NOT NULL,
+	`user_id` int NOT NULL,
+	`email` varchar(320) NOT NULL,
+	`status` enum('pending','sent','opened','clicked','bounced','failed') NOT NULL DEFAULT 'pending',
+	`sent_at` datetime,
+	`opened_at` datetime,
+	`clicked_at` datetime,
+	`error_message` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `campaign_recipients_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `email_campaigns` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`created_by` int NOT NULL,
+	`name` varchar(255) NOT NULL,
+	`subject` varchar(255) NOT NULL,
+	`content` text NOT NULL,
+	`template_type` enum('announcement','reminder','update','custom') NOT NULL DEFAULT 'custom',
+	`target_type` enum('all_users','by_grant_category','by_application_status','by_user_role','custom_list') NOT NULL,
+	`target_grants` json,
+	`target_categories` json,
+	`target_statuses` json,
+	`target_roles` json,
+	`target_user_ids` json,
+	`status` enum('draft','scheduled','sending','sent','paused','cancelled') NOT NULL DEFAULT 'draft',
+	`scheduled_at` datetime,
+	`sent_at` datetime,
+	`total_recipients` int NOT NULL DEFAULT 0,
+	`sent_count` int NOT NULL DEFAULT 0,
+	`opened_count` int NOT NULL DEFAULT 0,
+	`clicked_count` int NOT NULL DEFAULT 0,
+	`bounced_count` int NOT NULL DEFAULT 0,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `email_campaigns_id` PRIMARY KEY(`id`)
+);
