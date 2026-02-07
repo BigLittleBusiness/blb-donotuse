@@ -198,3 +198,15 @@
 - [x] Add provider verification button
 - [x] Test dashboard functionality
 - [ ] Commit to GitHub
+
+
+## Location-Based Grant Filtering
+- [x] Create suburbs and postcodes database tables
+- [x] Implement suburb-to-postcode mapping system
+- [x] Create location assignment for grants
+- [x] Build location search and filtering backend
+- [x] Create location UI components (LocationSelector, LocationGrantSearch)
+- [x] Add location field to user profile
+- [x] Implement "grants available to my area" filter
+- [ ] Test location-based filtering end-to-end
+- [ ] Commit to GitHub

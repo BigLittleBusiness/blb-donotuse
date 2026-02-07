@@ -307,3 +307,46 @@ export const email_delivery_logs = mysqlTable("email_delivery_logs", {
 
 export type EmailDeliveryLog = typeof email_delivery_logs.$inferSelect;
 export type InsertEmailDeliveryLog = typeof email_delivery_logs.$inferInsert;
+
+
+/**
+ * Suburbs table - stores Australian suburbs and their postcodes
+ */
+export const suburbs = mysqlTable("suburbs", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull().unique(),
+  postcode: varchar("postcode", { length: 10 }).notNull(),
+  state: varchar("state", { length: 50 }).notNull(), // NSW, VIC, QLD, WA, SA, TAS, ACT, NT
+  latitude: decimal("latitude", { precision: 10, scale: 8 }),
+  longitude: decimal("longitude", { precision: 11, scale: 8 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Suburb = typeof suburbs.$inferSelect;
+export type InsertSuburb = typeof suburbs.$inferInsert;
+
+/**
+ * Grant Locations table - tracks which suburbs/postcodes each grant is available in
+ */
+export const grant_locations = mysqlTable("grant_locations", {
+  id: int("id").autoincrement().primaryKey(),
+  grant_id: int("grant_id").notNull(),
+  suburb_id: int("suburb_id").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GrantLocation = typeof grant_locations.$inferSelect;
+export type InsertGrantLocation = typeof grant_locations.$inferInsert;
+
+/**
+ * User Locations table - tracks user's home suburb/postcode for personalized filtering
+ */
+export const user_locations = mysqlTable("user_locations", {
+  id: int("id").autoincrement().primaryKey(),
+  user_id: int("user_id").notNull(),
+  suburb_id: int("suburb_id").notNull(),
+  is_primary: boolean("is_primary").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type UserLocation = typeof user_locations.$inferSelect;
+export type InsertUserLocation = typeof user_locations.$inferInsert;

@@ -8,6 +8,7 @@ import { exportRouter } from "./routers/export";
 import { filtersRouter } from "./routers/filters";
 import { campaignsRouter } from "./routers/campaigns";
 import { emailProviderRouter } from "./routers/email-provider";
+import { locationsRouter } from "./routers/locations";
 
 export const appRouter = router({
   system: router({
@@ -428,6 +429,8 @@ export const appRouter = router({
 
   // ============ EMAIL PROVIDER ROUTERS ============
   emailProvider: emailProviderRouter,
+  // ============ LOCATIONS ROUTERS ============
+  locations: locationsRouter,
 });
 
 export type AppRouter = typeof appRouter;
