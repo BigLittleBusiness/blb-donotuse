@@ -397,3 +397,65 @@ export const location_notification_preferences = mysqlTable("location_notificati
 });
 export type LocationNotificationPreference = typeof location_notification_preferences.$inferSelect;
 export type InsertLocationNotificationPreference = typeof location_notification_preferences.$inferInsert;
+
+
+/**
+ * Report Schedules table - tracks scheduled report generation for LGAs
+ */
+export const report_schedules = mysqlTable("report_schedules", {
+  id: int("id").autoincrement().primaryKey(),
+  lga_id: int("lga_id").notNull(), // Reference to LGA
+  report_type: mysqlEnum("report_type", ["monthly", "quarterly", "annual"]).default("monthly").notNull(),
+  schedule_day: int("schedule_day").default(1).notNull(), // Day of month (1-31) or day of quarter
+  schedule_time: varchar("schedule_time", { length: 5 }).default("02:00").notNull(), // Time in HH:MM format (UTC)
+  is_active: boolean("is_active").default(true).notNull(),
+  last_generated_at: timestamp("last_generated_at"),
+  next_scheduled_at: timestamp("next_scheduled_at"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ReportSchedule = typeof report_schedules.$inferSelect;
+export type InsertReportSchedule = typeof report_schedules.$inferInsert;
+
+/**
+ * Report History table - tracks generated reports and their delivery status
+ */
+export const report_history = mysqlTable("report_history", {
+  id: int("id").autoincrement().primaryKey(),
+  schedule_id: int("schedule_id").notNull(), // Reference to report schedule
+  lga_id: int("lga_id").notNull(), // Reference to LGA
+  report_period: varchar("report_period", { length: 7 }).notNull(), // YYYY-MM format
+  report_year: int("report_year").notNull(),
+  report_month: int("report_month").notNull(),
+  report_data: json("report_data").notNull(), // Serialized report data
+  report_file_url: varchar("report_file_url", { length: 512 }), // URL to stored report (PDF/CSV)
+  generation_status: mysqlEnum("generation_status", ["pending", "generating", "completed", "failed"]).default("pending").notNull(),
+  generation_error: text("generation_error"), // Error message if generation failed
+  generated_at: timestamp("generated_at"),
+  delivery_status: mysqlEnum("delivery_status", ["pending", "sent", "failed"]).default("pending").notNull(),
+  delivery_error: text("delivery_error"), // Error message if delivery failed
+  delivered_at: timestamp("delivered_at"),
+  delivered_to: json("delivered_to"), // Array of email addresses report was sent to
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ReportHistory = typeof report_history.$inferSelect;
+export type InsertReportHistory = typeof report_history.$inferInsert;
+
+/**
+ * LGA Admins table - tracks which users are admins for each LGA
+ */
+export const lga_admins = mysqlTable("lga_admins", {
+  id: int("id").autoincrement().primaryKey(),
+  lga_id: int("lga_id").notNull(), // Reference to LGA
+  user_id: int("user_id").notNull(), // Reference to user
+  role: mysqlEnum("role", ["primary_admin", "secondary_admin", "viewer"]).default("secondary_admin").notNull(),
+  email_reports: boolean("email_reports").default(true).notNull(), // Whether to receive reports via email
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type LGAAdmin = typeof lga_admins.$inferSelect;
+export type InsertLGAAdmin = typeof lga_admins.$inferInsert;

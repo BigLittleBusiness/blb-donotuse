@@ -10,6 +10,7 @@ import { campaignsRouter } from "./routers/campaigns";
 import { emailProviderRouter } from "./routers/email-provider";
 import { locationsRouter } from "./routers/locations";
 import { postcodeRouter } from "./routers/postcode";
+import { reportsRouter } from "./routers/reports";
 
 export const appRouter = router({
   system: router({
@@ -433,6 +434,8 @@ export const appRouter = router({
   // ============ LOCATIONS ROUTERS ============
   locations: locationsRouter,
   postcode: postcodeRouter,
+  // ============ REPORTS ROUTERS ============
+  reports: reportsRouter,
 });
 
 export type AppRouter = typeof appRouter;

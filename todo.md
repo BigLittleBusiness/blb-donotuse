@@ -262,3 +262,43 @@
 - [ ] Build report UI for council leadership
 - [ ] Add PDF export for reports
 - [ ] Test report accuracy and generation
+
+
+## Phase 4: Automatic Monthly Report Scheduling
+
+### Report Scheduling Infrastructure
+- [x] Create report_schedules table in database schema
+- [x] Create report_history table for tracking generated reports
+- [x] Add LGA admin assignment table (lga_admins)
+- [x] Create database helper functions for scheduling management (db-report-scheduling.ts)
+
+### Report Generation Job
+- [x] Create scheduled job handler for monthly report generation (jobs/report-generation.ts)
+- [x] Implement cron-based scheduling (1st of each month at 2 AM UTC)
+- [x] Add report generation logic with error handling
+- [x] Create report storage and retrieval system
+
+### Email Delivery System
+- [x] Create email templates for monthly reports
+- [x] Implement email delivery to LGA admins (with placeholder)
+- [ ] Add report attachment generation (PDF/CSV)
+- [ ] Create email tracking and retry logic
+
+### Report Management UI
+- [ ] Create report scheduling configuration page for admins
+- [ ] Build report history view for council leadership
+- [ ] Add report download functionality
+- [ ] Implement report preview system
+
+### tRPC Procedures
+- [x] Create report management tRPC router (routers/reports.ts)
+- [x] Add procedures for schedule management
+- [x] Add procedures for report retrieval
+- [x] Add procedures for admin assignment
+
+### Testing and Deployment
+- [x] Write tests for scheduling logic (22 tests, all passing)
+- [x] Write tests for report generation job
+- [x] Write tests for email delivery
+- [ ] Test end-to-end monthly report workflow
+- [ ] Deploy and verify scheduling system
