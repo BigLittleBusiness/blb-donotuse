@@ -234,3 +234,31 @@
 - [x] Show success rates by suburb
 - [x] Add comparison between suburbs
 - [x] Test analytics calculations
+
+
+## Postcode Validation System
+- [x] Create Australian postcode validation database
+- [ ] Implement real-time validation in GrantLocationSelector
+- [x] Add postcode-to-suburb auto-correction
+- [x] Create validation error messaging
+- [x] Test validation accuracy (23/23 tests passing)
+
+## Location-Based Notification System
+- [x] Create location_notifications table in database
+- [x] Implement notification trigger for new grants in user's area (database helpers)
+- [x] Add tRPC procedures for notification management
+- [x] Create location notification preferences system
+- [x] Add nearby suburbs calculation (Haversine formula)
+- [x] Test location-based notifications (18/18 tests passing)
+- [x] Build notification UI components (LocationNotificationCenter, NotificationsList)
+- [x] Create LocationNotifications page with full UI
+- [x] Add route to App.tsx and DashboardLayout
+- [ ] Add email notification integration
+- [ ] Test location-based notifications end-to-end
+
+## Monthly Performance Reports
+- [ ] Create report generation backend procedures
+- [ ] Implement report scheduling system
+- [ ] Build report UI for council leadership
+- [ ] Add PDF export for reports
+- [ ] Test report accuracy and generation

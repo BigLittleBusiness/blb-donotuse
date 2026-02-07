@@ -1,5 +1,5 @@
 import { eq, and, inArray } from "drizzle-orm";
-import { suburbs, grant_locations, user_locations, grants } from "../drizzle/schema";
+import { suburbs, grant_locations, user_locations, grants, location_notifications, location_notification_preferences } from "../drizzle/schema";
 import { getDb } from "./db";
 
 /**
@@ -287,8 +287,8 @@ export async function seedSuburbs() {
           name: suburb.name,
           postcode: suburb.postcode,
           state: suburb.state,
-          latitude: suburb.latitude,
-          longitude: suburb.longitude,
+          latitude: suburb.latitude.toString(),
+          longitude: suburb.longitude.toString(),
         });
       }
     }
@@ -297,3 +297,265 @@ export async function seedSuburbs() {
     console.error("[Database] Failed to seed suburbs:", error);
   }
 }
+
+
+/**
+ * Get nearby suburbs within a specified radius (in km)
+ * Uses simple distance calculation based on latitude/longitude
+ */
+export async function getNearbySuburbs(suburbId: number, radiusKm: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+
+  // Get the center suburb's coordinates
+  const centerSuburb = await db
+    .select()
+    .from(suburbs)
+    .where(eq(suburbs.id, suburbId))
+    .limit(1);
+
+  if (!centerSuburb || centerSuburb.length === 0) return [];
+
+  const center = centerSuburb[0];
+  if (!center.latitude || !center.longitude) return [];
+
+  // Get all suburbs and filter by distance
+  const allSuburbs = await db.select().from(suburbs);
+  
+  const nearby = allSuburbs.filter((suburb) => {
+    if (!suburb.latitude || !suburb.longitude) return false;
+    
+    // Simple distance calculation (Haversine formula approximation)
+    const lat1 = parseFloat(center.latitude || "0");
+    const lon1 = parseFloat(center.longitude || "0");
+    const lat2 = parseFloat(suburb.latitude || "0");
+    const lon2 = parseFloat(suburb.longitude || "0");
+    
+    const R = 6371; // Earth's radius in km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    
+    return distance <= radiusKm && distance > 0; // Exclude the center suburb itself
+  });
+
+  return nearby;
+}
+
+/**
+ * Create location notification for a user when a grant is added to their area
+ */
+export async function createLocationNotification(
+  userId: number,
+  suburbId: number,
+  grantId: number,
+  notificationType: "new_grant" | "grant_updated" | "application_deadline_reminder" | "grant_awarded" = "new_grant"
+) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  try {
+    const result = await db.insert(location_notifications).values({
+      user_id: userId,
+      suburb_id: suburbId,
+      grant_id: grantId,
+      notification_type: notificationType,
+      is_sent: false,
+    });
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to create location notification:", error);
+    return undefined;
+  }
+}
+
+/**
+ * Get unsent location notifications for a user
+ */
+export async function getUnsentNotifications(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db
+    .select()
+    .from(location_notifications)
+    .where(
+      and(
+        eq(location_notifications.user_id, userId),
+        eq(location_notifications.is_sent, false)
+      )
+    );
+
+  return result;
+}
+
+/**
+ * Mark notification as sent
+ */
+export async function markNotificationAsSent(notificationId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  try {
+    const result = await db
+      .update(location_notifications)
+      .set({
+        is_sent: true,
+        sent_at: new Date(),
+      })
+      .where(eq(location_notifications.id, notificationId));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to mark notification as sent:", error);
+    return undefined;
+  }
+}
+
+/**
+ * Mark notification as read
+ */
+export async function markNotificationAsRead(notificationId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  try {
+    const result = await db
+      .update(location_notifications)
+      .set({
+        is_read: true,
+        read_at: new Date(),
+      })
+      .where(eq(location_notifications.id, notificationId));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to mark notification as read:", error);
+    return undefined;
+  }
+}
+
+/**
+ * Get user's location notification preferences
+ */
+export async function getLocationNotificationPreferences(userId: number, suburbId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db
+    .select()
+    .from(location_notification_preferences)
+    .where(
+      and(
+        eq(location_notification_preferences.user_id, userId),
+        eq(location_notification_preferences.suburb_id, suburbId)
+      )
+    )
+    .limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * Create or update location notification preferences
+ */
+export async function upsertLocationNotificationPreferences(
+  userId: number,
+  suburbId: number,
+  preferences: {
+    notify_new_grants?: boolean;
+    notify_grant_updates?: boolean;
+    notify_nearby_areas?: boolean;
+    nearby_radius_km?: number;
+    notification_frequency?: "immediate" | "daily" | "weekly" | "never";
+  }
+) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  try {
+    const existing = await getLocationNotificationPreferences(userId, suburbId);
+
+    if (existing) {
+      const result = await db
+        .update(location_notification_preferences)
+        .set({
+          notify_new_grants: preferences.notify_new_grants ?? existing.notify_new_grants,
+          notify_grant_updates: preferences.notify_grant_updates ?? existing.notify_grant_updates,
+          notify_nearby_areas: preferences.notify_nearby_areas ?? existing.notify_nearby_areas,
+          nearby_radius_km: preferences.nearby_radius_km ?? existing.nearby_radius_km,
+          notification_frequency: preferences.notification_frequency ?? existing.notification_frequency,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(location_notification_preferences.user_id, userId),
+            eq(location_notification_preferences.suburb_id, suburbId)
+          )
+        );
+      return result;
+    } else {
+      const result = await db.insert(location_notification_preferences).values({
+        user_id: userId,
+        suburb_id: suburbId,
+        notify_new_grants: preferences.notify_new_grants ?? true,
+        notify_grant_updates: preferences.notify_grant_updates ?? true,
+        notify_nearby_areas: preferences.notify_nearby_areas ?? false,
+        nearby_radius_km: preferences.nearby_radius_km ?? 10,
+        notification_frequency: preferences.notification_frequency ?? "immediate",
+      });
+      return result;
+    }
+  } catch (error) {
+    console.error("[Database] Failed to upsert location notification preferences:", error);
+    return undefined;
+  }
+}
+
+/**
+ * Find all users to notify when a grant is added to a location
+ */
+export async function getUsersToNotifyForGrant(grantId: number, suburbIds: number[]) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    // Get all users with locations in the grant's suburbs
+    const usersWithLocations = await db
+      .select({
+        user_id: user_locations.user_id,
+        suburb_id: user_locations.suburb_id,
+      })
+      .from(user_locations)
+      .where(inArray(user_locations.suburb_id, suburbIds));
+
+    // Filter by notification preferences
+    const usersToNotify = [];
+    for (const userLocation of usersWithLocations) {
+      const prefs = await getLocationNotificationPreferences(
+        userLocation.user_id,
+        userLocation.suburb_id
+      );
+
+      // If no preferences exist, use defaults (notify)
+      if (!prefs || prefs.notify_new_grants) {
+        usersToNotify.push({
+          userId: userLocation.user_id,
+          suburbId: userLocation.suburb_id,
+        });
+      }
+    }
+
+    return usersToNotify;
+  } catch (error) {
+    console.error("[Database] Failed to get users to notify:", error);
+    return [];
+  }
+}
+
+

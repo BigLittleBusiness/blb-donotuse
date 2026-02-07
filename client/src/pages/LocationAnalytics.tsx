@@ -16,7 +16,8 @@ export default function LocationAnalytics() {
     { enabled: searchQuery.length > 0 }
   );
 
-  const { data: locationStats } = trpc.locations.getLocationStats.useQuery({});
+  // Location stats will be added in Phase 3 (monthly reports)
+  // const { data: locationStats } = trpc.locations.getLocationStats.useQuery({});
 
   // Sample data for demonstration
   const applicationRatesBySuburb = [
@@ -74,7 +75,7 @@ export default function LocationAnalytics() {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Total Suburbs Covered</p>
                 <p className="text-3xl font-bold text-slate-900">
-                  {locationStats?.totalSuburbs || 156}
+                  {156}
                 </p>
               </div>
               <MapPin className="w-8 h-8 text-blue-600 opacity-20" />
@@ -88,7 +89,7 @@ export default function LocationAnalytics() {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Total Applications</p>
                 <p className="text-3xl font-bold text-slate-900">
-                  {locationStats?.totalApplications || 1425}
+                  {1425}
                 </p>
               </div>
               <Target className="w-8 h-8 text-green-600 opacity-20" />
@@ -102,7 +103,7 @@ export default function LocationAnalytics() {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Avg Success Rate</p>
                 <p className="text-3xl font-bold text-slate-900">
-                  {locationStats?.avgSuccessRate || 70}%
+                  {70}%
                 </p>
               </div>
               <Award className="w-8 h-8 text-purple-600 opacity-20" />
@@ -116,7 +117,7 @@ export default function LocationAnalytics() {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Total Grants</p>
                 <p className="text-3xl font-bold text-slate-900">
-                  {locationStats?.totalGrants || 210}
+                  {210}
                 </p>
               </div>
               <TrendingUp className="w-8 h-8 text-orange-600 opacity-20" />

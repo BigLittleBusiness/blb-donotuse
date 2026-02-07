@@ -350,3 +350,50 @@ export const user_locations = mysqlTable("user_locations", {
 });
 export type UserLocation = typeof user_locations.$inferSelect;
 export type InsertUserLocation = typeof user_locations.$inferInsert;
+
+/**
+ * Location Notifications table - tracks location-based notification preferences and delivery
+ */
+export const location_notifications = mysqlTable("location_notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  user_id: int("user_id").notNull(),
+  suburb_id: int("suburb_id").notNull(),
+  grant_id: int("grant_id").notNull(),
+  notification_type: mysqlEnum("notification_type", [
+    "new_grant",
+    "grant_updated",
+    "application_deadline_reminder",
+    "grant_awarded"
+  ]).notNull(),
+  is_sent: boolean("is_sent").default(false).notNull(),
+  sent_at: timestamp("sent_at"),
+  is_read: boolean("is_read").default(false).notNull(),
+  read_at: timestamp("read_at"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type LocationNotification = typeof location_notifications.$inferSelect;
+export type InsertLocationNotification = typeof location_notifications.$inferInsert;
+
+/**
+ * Location Notification Preferences table - user preferences for location-based notifications
+ */
+export const location_notification_preferences = mysqlTable("location_notification_preferences", {
+  id: int("id").autoincrement().primaryKey(),
+  user_id: int("user_id").notNull(),
+  suburb_id: int("suburb_id").notNull(),
+  notify_new_grants: boolean("notify_new_grants").default(true).notNull(),
+  notify_grant_updates: boolean("notify_grant_updates").default(true).notNull(),
+  notify_nearby_areas: boolean("notify_nearby_areas").default(false).notNull(),
+  nearby_radius_km: int("nearby_radius_km").default(10).notNull(), // Radius in km for nearby area notifications
+  notification_frequency: mysqlEnum("notification_frequency", [
+    "immediate",
+    "daily",
+    "weekly",
+    "never"
+  ]).default("immediate").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type LocationNotificationPreference = typeof location_notification_preferences.$inferSelect;
+export type InsertLocationNotificationPreference = typeof location_notification_preferences.$inferInsert;
