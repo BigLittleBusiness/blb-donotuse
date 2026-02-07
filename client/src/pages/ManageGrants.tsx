@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { GrantLocationSelector } from "@/components/GrantLocationSelector";
 import {
   Plus,
   Edit,
@@ -422,6 +423,12 @@ export default function ManageGrants() {
                   />
                 </div>
               </div>
+
+              {!isCreating && selectedGrant && (
+                <div className="border-t pt-6 mt-6">
+                  <GrantLocationSelector grantId={selectedGrant.id} />
+                </div>
+              )}
 
               <div className="flex gap-3 pt-4">
                 <Button onClick={handleSaveGrant} size="lg">

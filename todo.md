@@ -210,3 +210,27 @@
 - [x] Implement "grants available to my area" filter
 - [ ] Test location-based filtering end-to-end
 - [ ] Commit to GitHub
+
+
+## Grant Location Assignment UI
+- [x] Create location selector component for grant forms
+- [ ] Integrate into grant creation form
+- [x] Integrate into grant editing form
+- [ ] Add location preview in grant details
+- [ ] Test location assignment workflow
+
+## Geographic Grant Visualization Map
+- [x] Create interactive map component with Google Maps
+- [x] Display grants by location on map
+- [x] Add suburb/postcode markers
+- [x] Implement drill-down to view grant details
+- [x] Add filtering by grant category on map
+- [x] Test map visualization
+
+## Location-Based Analytics Dashboard
+- [x] Create analytics backend procedures for location stats
+- [x] Build dashboard UI with charts and tables
+- [x] Show application rates by suburb
+- [x] Show success rates by suburb
+- [x] Add comparison between suburbs
+- [x] Test analytics calculations
