@@ -459,3 +459,45 @@ export const lga_admins = mysqlTable("lga_admins", {
 
 export type LGAAdmin = typeof lga_admins.$inferSelect;
 export type InsertLGAAdmin = typeof lga_admins.$inferInsert;
+
+
+/**
+ * Grant Votes table - tracks community member votes on grants
+ * One vote per user per grant - immutable records
+ */
+export const grant_votes = mysqlTable("grant_votes", {
+  id: int("id").autoincrement().primaryKey(),
+  grant_id: int("grant_id").notNull(), // Reference to grant
+  user_id: int("user_id").notNull(), // Reference to user (must be registered community member)
+  vote_type: mysqlEnum("vote_type", ["support", "oppose", "neutral"]).notNull(), // Type of vote
+  lga_id: int("lga_id"), // LGA of the voter (for analytics)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  // Note: No updatedAt - votes are immutable once created
+});
+
+// Unique constraint: one vote per user per grant
+export const grantVotesIndex = mysqlTable("grant_votes_unique", {
+  grant_id: int("grant_id").notNull(),
+  user_id: int("user_id").notNull(),
+});
+
+export type GrantVote = typeof grant_votes.$inferSelect;
+export type InsertGrantVote = typeof grant_votes.$inferInsert;
+
+/**
+ * Vote Visibility Settings table - admin configuration for vote result visibility
+ */
+export const vote_visibility_settings = mysqlTable("vote_visibility_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  lga_id: int("lga_id").notNull(), // LGA-specific setting
+  visibility_level: mysqlEnum("visibility_level", ["public", "community_only", "admin_only"]).default("community_only").notNull(),
+  // public: all users see vote counts
+  // community_only: only registered community members see vote counts
+  // admin_only: only council staff see vote counts
+  allow_community_see_own_vote: boolean("allow_community_see_own_vote").default(true).notNull(), // Community members can always see their own vote
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type VoteVisibilitySetting = typeof vote_visibility_settings.$inferSelect;
+export type InsertVoteVisibilitySetting = typeof vote_visibility_settings.$inferInsert;

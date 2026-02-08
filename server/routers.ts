@@ -11,6 +11,7 @@ import { emailProviderRouter } from "./routers/email-provider";
 import { locationsRouter } from "./routers/locations";
 import { postcodeRouter } from "./routers/postcode";
 import { reportsRouter } from "./routers/reports";
+import { votingRouter } from "./routers/voting";
 
 export const appRouter = router({
   system: router({
@@ -434,6 +435,8 @@ export const appRouter = router({
   // ============ LOCATIONS ROUTERS ============
   locations: locationsRouter,
   postcode: postcodeRouter,
+  // ============ VOTING ROUTERS ============
+  voting: votingRouter,
   // ============ REPORTS ROUTERS ============
   reports: reportsRouter,
 });

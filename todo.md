@@ -302,3 +302,47 @@
 - [x] Write tests for email delivery
 - [ ] Test end-to-end monthly report workflow
 - [ ] Deploy and verify scheduling system
+
+
+## Phase 5: Grant Voting System
+
+### Database & Backend
+- [x] Create grant_votes table with user_id, grant_id, vote_type, created_at, immutable constraint
+- [x] Create vote_visibility_settings table for admin configuration
+- [x] Add database helper functions for voting operations (9 functions)
+- [x] Implement vote counting and statistics queries
+- [x] Create tRPC procedures for voting (9 procedures)
+
+### Voting Features
+- [x] Implement one-vote-per-user-per-grant constraint
+- [x] Create immutable vote records (no updates/deletes)
+- [x] Build vote statistics by grant, LGA, grant type
+- [ ] Implement vote sorting option for grant listings
+- [x] Add vote visibility settings (Public/Community/Admin)
+
+### UI Components
+- [x] Create voting buttons component (thumbs up, thumbs down, neutral)
+- [ ] Add voting UI to grant details page
+- [x] Build voting statistics display component
+- [ ] Create sort option for grants by vote count
+- [ ] Implement visibility toggle for vote results based on user role
+
+### Admin Features
+- [ ] Create admin settings page for vote visibility configuration
+- [ ] Add vote visibility options (Public, Community Only, Admin Only)
+- [ ] Build vote analytics dashboard for admins
+- [ ] Create vote audit log for transparency
+
+### Reporting Integration
+- [ ] Add voting statistics to monthly performance reports
+- [ ] Break down voting data by LGA/suburb level
+- [ ] Break down voting data by grant type
+- [ ] Create voting insights section in council admin reports
+- [ ] Generate "most valued grants" analysis by region
+
+### Testing
+- [ ] Write tests for voting operations
+- [ ] Test vote immutability
+- [ ] Test one-vote-per-user constraint
+- [ ] Test visibility settings
+- [ ] Test reporting data accuracy
