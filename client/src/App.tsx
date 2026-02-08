@@ -24,7 +24,8 @@ import CampaignBuilder from "./pages/CampaignBuilder";
 import EmailProviderDashboard from "./pages/EmailProviderDashboard";
 import GrantMap from "./pages/GrantMap";
 import LocationAnalytics from "./pages/LocationAnalytics";
-import LocationNotifications from "./pages/LocationNotifications";
+import LocationNotifications from "@/pages/LocationNotifications";
+import VoteVisibilitySettings from "@/pages/VoteVisibilitySettings";
 import NotFound from "./pages/NotFound";
 import { useAuth } from "./_core/hooks/useAuth";
 
@@ -58,6 +59,7 @@ function Router() {
           <Route path="/grants/map" component={() => <DashboardLayout><GrantMap /></DashboardLayout>} />
           <Route path="/analytics/locations" component={() => <DashboardLayout><LocationAnalytics /></DashboardLayout>} />
           <Route path="/notifications/locations" component={() => <DashboardLayout><LocationNotifications /></DashboardLayout>} />
+          <Route path="/admin/vote-visibility" component={() => <DashboardLayout><VoteVisibilitySettings /></DashboardLayout>} />
         </>
       )}
 

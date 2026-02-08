@@ -3,17 +3,22 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "wouter";
-import { Search, Filter, Calendar, DollarSign, MapPin } from "lucide-react";
+import { Search, Filter, Calendar, DollarSign, MapPin, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Grants() {
   const [status, setStatus] = useState<string>("");
   const [category, setCategory] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("default");
 
   const { data: grants, isLoading } = trpc.grants.list.useQuery({
     status: status || undefined,
     category: category || undefined,
+  });
+
+  const { data: allVoteStats } = trpc.voting.getMostVotedGrants.useQuery({
+    limit: 1000,
   });
 
   const filteredGrants = grants?.filter(
@@ -21,6 +26,15 @@ export default function Grants() {
       grant.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       grant.description.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
+
+  const sortedGrants = [...filteredGrants].sort((a: any, b: any) => {
+    if (sortBy === "most-voted") {
+      const aVotes = allVoteStats?.find((v: any) => v.grant_id === a.id)?.total || 0;
+      const bVotes = allVoteStats?.find((v: any) => v.grant_id === b.id)?.total || 0;
+      return bVotes - aVotes;
+    }
+    return 0;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -72,11 +86,24 @@ export default function Grants() {
                   </select>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Sort By</label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="default">Default</option>
+                    <option value="most-voted">Most Voted</option>
+                  </select>
+                </div>
+
                 <Button
                   onClick={() => {
                     setStatus("");
                     setCategory("");
                     setSearchTerm("");
+                    setSortBy("default");
                   }}
                   variant="outline"
                   className="w-full"
@@ -113,7 +140,7 @@ export default function Grants() {
                   <p className="text-slate-600 text-lg">No grants found matching your criteria.</p>
                 </div>
               ) : (
-                filteredGrants.map((grant) => (
+                sortedGrants.map((grant: any) => (
                   <Link key={grant.id} href={`/grants/${grant.id}`}>
                     <a className="block">
                       <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-blue-500">
@@ -128,7 +155,7 @@ export default function Grants() {
 
                         <p className="text-slate-600 mb-4 line-clamp-2">{grant.description}</p>
 
-                        <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div className="grid grid-cols-4 gap-4 mb-4">
                           <div className="flex items-center gap-2 text-slate-600">
                             <DollarSign className="w-4 h-4" />
                             <span className="font-semibold">${Number(grant.budget).toLocaleString()}</span>
@@ -143,6 +170,12 @@ export default function Grants() {
                               <span>{new Date(grant.closing_date).toLocaleDateString()}</span>
                             </div>
                           )}
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <TrendingUp className="w-4 h-4" />
+                            <span className="text-sm">
+                              {allVoteStats?.find((v: any) => v.grant_id === grant.id)?.total || 0} votes
+                            </span>
+                          </div>
                         </div>
 
                         <Button variant="outline" size="sm">

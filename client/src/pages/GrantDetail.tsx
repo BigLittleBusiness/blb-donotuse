@@ -7,6 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, DollarSign, FileText, Heart, MessageCircle, Share2 } from "lucide-react";
 import { useState } from "react";
+import { GrantVotingButtons } from "@/components/GrantVotingButtons";
+import { VoteStatistics } from "@/components/VoteStatistics";
+import { useLocation } from "wouter";
 
 export default function GrantDetail() {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +25,12 @@ export default function GrantDetail() {
   const voteMutation = trpc.community.vote.useMutation();
   const commentMutation = trpc.community.comment.useMutation();
   const watchMutation = trpc.community.watchGrant.useMutation();
+  
+  // Refetch vote statistics when vote is submitted
+  const { refetch: refetchVoteStats } = trpc.voting.getGrantVoteStats.useQuery(
+    { grantId },
+    { enabled: false }
+  );
 
   const [commentText, setCommentText] = useState("");
 
@@ -203,38 +212,21 @@ export default function GrantDetail() {
               )}
 
               <div className="border-t pt-4">
-                <h3 className="font-semibold text-slate-900 mb-3">Community Support</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-600">Support</span>
-                    <span className="font-bold text-green-600">{supportVotes}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-600">Oppose</span>
-                    <span className="font-bold text-red-600">{opposeVotes}</span>
-                  </div>
+                <h3 className="font-semibold text-slate-900 mb-3">Community Voting</h3>
+                <div className="space-y-4">
+                  {/* New Voting Buttons Component */}
+                  <GrantVotingButtons
+                    grantId={grantId}
+                    lgaId={grant?.lga_id}
+                    onVoteSubmitted={() => refetchVoteStats()}
+                  />
+                  
+                  {/* Vote Statistics Component */}
+                  <VoteStatistics
+                    grantId={grantId}
+                    lgaId={grant?.lga_id}
+                  />
                 </div>
-
-                {user && (
-                  <div className="mt-4 space-y-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => handleVote("support")}
-                    >
-                      👍 Support
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => handleVote("oppose")}
-                    >
-                      👎 Oppose
-                    </Button>
-                  </div>
-                )}
               </div>
 
               <div className="border-t pt-4">
